@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BDPADrive - Search</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+  <div class="dashboard">
+    <nav class="top-nav">
+      <div class="nav-brand">BDPADrive</div>
+      <div class="nav-links">
+        <a href="/dashboard">My Files</a>
+        <a href="/search" class="active">Search</a>
+      </div>
+      <div class="nav-user">
+        <span><%= user.username %></span>
+        <form action="/auth/logout" method="POST" style="display: inline;">
+          <button type="submit" class="btn-link">Logout</button>
+        </form>
+      </div>
+    </nav>
+
+    <div class="content">
+      <h1>Search Files</h1>
+
+      <form action="/search" method="GET" class="search-form">
+        <input type="text" name="query" value="<%= query %>" placeholder="Search files..." required>
+        <button type="submit" class="btn-primary">Search</button>
+      </form>
+
+      <div class="files-list">
+        <% if (typeof query !== 'undefined') { %>
+          <% if (files.length === 0) { %>
+            <p>No files found matching your search.</p>
+          <% } else { %>
+            <% files.forEach(function(file) { %>
+              <div class="file-item">
+                <div class="file-icon">
+                  <% if (file.type === 'directory') { %>
+                    📁
+                  <% } else if (file.type === 'file') { %>
+                    📄
+                  <% } else { %>
+                    🔗
+                  <% } %>
+                </div>
+                <div class="file-info">
+                  <div class="file-name"><%= file.name %></div>
+                  <div class="file-meta">
+                    Modified: <%= new Date(file.modifiedAt).toLocaleDateString() %>
+                  </div>
+                </div>
+                <div class="file-actions">
+                  <button class="btn-icon" onclick="editFile('<%= file.node_id %>')">✏️</button>
+                  <button class="btn-icon" onclick="deleteFile('<%= file.node_id %>')">🗑️</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function editFile(nodeId) {
+      // TODO: Implement file editing
+    }
+
+    function deleteFile(nodeId) {
+      // TODO: Implement file deletion
+    }
+  </script>
+</body>
+</html>

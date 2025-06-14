@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BDPADrive - Dashboard</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+  <div class="dashboard">
+    <nav class="top-nav">
+      <div class="nav-brand">BDPADrive</div>
+      <div class="nav-links">
+        <a href="/dashboard">My Files</a>
+        <a href="/search">Search</a>
+      </div>
+      <div class="nav-user">
+        <span><%= user.username %></span>
+        <form action="/auth/logout" method="POST" style="display: inline;">
+          <button type="submit" class="btn-link">Logout</button>
+        </form>
+      </div>
+    </nav>
+
+    <div class="content">
+      <h1>My Files</h1>
+
+      <div class="actions">
+        <button class="btn-primary" onclick="createFile()">New File</button>
+        <button class="btn-secondary" onclick="createFolder()">New Folder</button>
+      </div>
+
+      <div class="files-list">
+        <% if (files.length === 0) { %>
+          <p>No files found. Create a new file to get started!</p>
+        <% } else { %>
+          <% files.forEach(function(file) { %>
+            <div class="file-item">
+              <div class="file-icon">
+                <% if (file.type === 'directory') { %>
+                  📁
+                <% } else if (file.type === 'file') { %>
+                  📄
+                <% } else { %>
+                  🔗
+                <% } %>
+              </div>
+              <div class="file-info">
+                <div class="file-name"><%= file.name %></div>
+                <div class="file-meta">
+                  Modified: <%= new Date(file.modifiedAt).toLocaleDateString() %>
+                </div>
+              </div>
+              <div class="file-actions">
+                <button class="btn-icon" onclick="editFile('<%= file.node_id %>')">✏️</button>
+                <button class="btn-icon" onclick="deleteFile('<%= file.node_id %>')">🗑️</button>
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function createFile() {
+      // TODO: Implement file creation
+    }
+
+    function createFolder() {
+      // TODO: Implement folder creation
+    }
+
+    function editFile(nodeId) {
+      // TODO: Implement file editing
+    }
+
+    function deleteFile(nodeId) {
+      // TODO: Implement file deletion
+    }
+  </script>
+</body>
+</html>
