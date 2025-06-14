@@ -2,34 +2,30 @@ const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = 'your-secret-key'; // In production, use environment variable
 
 const API_BASE_URL = 'https://drive.api.hscc.bdpa.org/v1';
 
-async function deriveKey(password, salt) {
-    const encoder = new TextEncoder();
-    const passwordBuffer = encoder.encode(password);
-    const saltBuffer = Buffer.from(salt, 'hex');
-    
-    const keyBuffer = await crypto.subtle.importKey(
-        'raw',
-        passwordBuffer,
-        'PBKDF2',
-        false,
-        ['deriveBits']
-    );
-    
-    const derivedBits = await crypto.subtle.deriveBits(
-        {
-            name: 'PBKDF2',
-            salt: saltBuffer,
-            iterations: 100000,
-            hash: 'SHA-256'
-        },
-        keyBuffer,
-        512
-    );
-    
-    return Buffer.from(derivedBits).toString('hex');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.BEARER_TOKEN.trim()}`
+};
+
+function deriveKey(password, salt) {
+    return new Promise((resolve, reject) => {
+        crypto.pbkdf2(
+            password,
+            Buffer.from(salt, 'hex'),
+            100000,
+            64,
+            'sha256',
+            (err, derivedKey) => {
+                if (err) reject(err);
+                resolve(derivedKey.toString('hex'));
+            }
+        );
+    });
 }
 
 /* GET auth page */
@@ -43,7 +39,7 @@ router.post('/login', async (req, res) => {
     
     try {
         // Get user data to get salt
-        const userResponse = await fetch(`${API_BASE_URL}/users/${username}`);
+        const userResponse = await fetch(`${API_BASE_URL}/users/${username}`, { headers });
         const userData = await userResponse.json();
         
         if (!userData.success) {
@@ -56,9 +52,7 @@ router.post('/login', async (req, res) => {
         // Attempt authentication
         const authResponse = await fetch(`${API_BASE_URL}/users/${username}/auth`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers,
             body: JSON.stringify({ key })
         });
         
@@ -88,9 +82,7 @@ router.post('/register', async (req, res) => {
         // Register user
         const response = await fetch(`${API_BASE_URL}/users`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers,
             body: JSON.stringify({
                 username,
                 email,
