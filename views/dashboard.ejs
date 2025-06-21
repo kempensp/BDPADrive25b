@@ -3,13 +3,16 @@
 <head>
   <title>BDPADrive - Dashboard</title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/explorer.css' />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="dashboard">
     <nav class="top-nav">
       <div class="nav-brand">BDPADrive</div>
       <div class="nav-links">
-        <a href="/dashboard">My Files</a>
+        <a href="/dashboard" class="active">My Files</a>
         <a href="/search">Search</a>
       </div>
       <div class="nav-user">
@@ -19,63 +22,341 @@
         </form>
       </div>
     </nav>
-
-    <div class="content">
-      <h1>My Files</h1>
-
-      <div class="actions">
-        <button class="btn-primary" onclick="createFile()">New File</button>
-        <button class="btn-secondary" onclick="createFolder()">New Folder</button>
+    
+    <div class="file-explorer">
+      <div class="file-explorer-header">
+        <div class="sort-controls">
+          <div class="sort-option active" data-sort="name">Name</div>
+          <div class="sort-option" data-sort="createdAt">Created</div>
+          <div class="sort-option" data-sort="modifiedAt">Modified</div>
+          <div class="sort-option" data-sort="size">Size</div>
+        </div>
+        <div class="file-explorer-actions">
+          <button class="btn btn-primary" onclick="showNewFileModal()">New File</button>
+          <button class="btn btn-secondary" onclick="showNewFolderModal()">New Folder</button>
+          <button class="btn btn-secondary" onclick="showNewSymlinkModal()">New Symlink</button>
+        </div>
       </div>
 
-      <div class="files-list">
-        <% if (files.length === 0) { %>
-          <p>No files found. Create a new file to get started!</p>
-        <% } else { %>
-          <% files.forEach(function(file) { %>
-            <div class="file-item">
-              <div class="file-icon">
-                <% if (file.type === 'directory') { %>
-                  📁
-                <% } else if (file.type === 'file') { %>
-                  📄
-                <% } else { %>
-                  🔗
-                <% } %>
-              </div>
-              <div class="file-info">
-                <div class="file-name"><%= file.name %></div>
-                <div class="file-meta">
-                  Modified: <%= new Date(file.modifiedAt).toLocaleDateString() %>
-                </div>
-              </div>
-              <div class="file-actions">
-                <button class="btn-icon" onclick="editFile('<%= file.node_id %>')">✏️</button>
-                <button class="btn-icon" onclick="deleteFile('<%= file.node_id %>')">🗑️</button>
-              </div>
-            </div>
-          <% }); %>
-        <% } %>
+      <div class="file-grid" id="fileGrid"></div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal" id="newFileModal">
+      <div class="modal-content">
+        <h2>Create New File</h2>
+        <form id="newFileForm">
+          <div class="form-group">
+            <label>File Name</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input type="text" name="tags">
+          </div>
+          <div class="form-group">
+            <label>Content</label>
+            <textarea name="text" rows="10"></textarea>
+          </div>
+          <div id="newFileError" style="color:red; display:none; margin-bottom:10px;"></div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" onclick="hideModal('newFileModal')">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
+
+    <!-- New Folder Modal -->
+    <div class="modal" id="newFolderModal">
+      <div class="modal-content">
+        <h2>Create New Folder</h2>
+        <form id="newFolderForm">
+          <div class="form-group">
+            <label>Folder Name</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" onclick="hideModal('newFolderModal')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- New Symlink Modal -->
+    <div class="modal" id="newSymlinkModal">
+      <div class="modal-content">
+        <h2>Create New Symlink</h2>
+        <form id="newSymlinkForm">
+          <div class="form-group">
+            <label>Symlink Name</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="form-group">
+            <label>Target Node ID</label>
+            <input type="text" name="targetNodeId" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" onclick="hideModal('newSymlinkModal')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let currentSort = 'name';
+      let files = [];
+
+      // Fetch and display files
+      async function loadFiles() {
+        try {
+          const response = await fetch('/api/filesystem');
+          const data = await response.json();
+          if (data.success && data.nodes) {
+            files = data.nodes;
+            sortFiles();
+            renderFiles();
+          }
+        } catch (error) {
+          console.error('Error loading files:', error);
+        }
+      }
+
+      // Sort files based on current sort option
+      function sortFiles() {
+        files.sort((a, b) => {
+          switch (currentSort) {
+            case 'name':
+              return a.name.localeCompare(b.name);
+            case 'createdAt':
+              return b.createdAt - a.createdAt;
+            case 'modifiedAt':
+              return b.modifiedAt - a.modifiedAt;
+            case 'size':
+              return (b.size || 0) - (a.size || 0);
+            default:
+              return 0;
+          }
+        });
+      }
+
+      // Generate preview for text files
+      async function generatePreview(text) {
+        const previewContainer = document.createElement('div');
+        previewContainer.style.padding = '10px';
+        previewContainer.style.maxWidth = '400px';
+        previewContainer.innerHTML = marked.parse(text.substring(0, 200));
+        
+        try {
+          const canvas = await html2canvas(previewContainer);
+          return canvas.toDataURL();
+        } catch (error) {
+          console.error('Error generating preview:', error);
+          return null;
+        }
+      }
+
+      // Render files in the grid
+      async function renderFiles() {
+        const grid = document.getElementById('fileGrid');
+        grid.innerHTML = '';
+
+        for (const file of files) {
+          const item = document.createElement('div');
+          item.className = `file-item ${file.type}`;
+          if (file.type === 'symlink' && isSymlinkBroken(file)) {
+            item.classList.add('symlink-broken');
+          }
+
+          let preview = '';
+          if (file.type === 'file' && file.text) {
+            const previewUrl = await generatePreview(file.text);
+            if (previewUrl) {
+              preview = `<div class="file-preview"><img src="${previewUrl}" alt="Preview"></div>`;
+            }
+          }
+
+          const created = new Date(file.createdAt).toLocaleString();
+          const modified = new Date(file.modifiedAt).toLocaleString();
+
+          let tags = '';
+          if (file.type === 'file' && file.tags && file.tags.length > 0) {
+            tags = `
+              <div class="file-tags">
+                ${file.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+              </div>
+            `;
+          }
+
+          item.innerHTML = `
+            <div class="file-item-header">
+              <strong>${file.name}</strong>
+              <div class="file-actions">
+                <button onclick="showEditModal('${file.node_id}')" class="btn-link">Edit</button>
+                <button onclick="deleteNode('${file.node_id}')" class="btn-link">Delete</button>
+              </div>
+            </div>
+            ${preview}
+            <div class="file-info">
+              <div>Type: ${file.type}</div>
+              <div>Created: ${created}</div>
+              <div>Modified: ${modified}</div>
+              ${file.size ? `<div>Size: ${formatSize(file.size)}</div>` : ''}
+            </div>
+            ${tags}
+          `;
+
+          grid.appendChild(item);
+        }
+      }
+
+      // Format file size in bytes to human readable format
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+      }
+
+      // Check if a symlink is broken
+      function isSymlinkBroken(file) {
+        if (file.type !== 'symlink') return false;
+        return !file.contents || file.contents.length === 0;
+      }
+
+      // Modal controls
+      function showNewFileModal() {
+        document.getElementById('newFileModal').classList.add('active');
+      }
+
+      function showNewFolderModal() {
+        document.getElementById('newFolderModal').classList.add('active');
+      }
+
+      function showNewSymlinkModal() {
+        document.getElementById('newSymlinkModal').classList.add('active');
+      }
+
+      function hideModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      }
+
+      // Create new file
+      document.getElementById('newFileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const tags = formData.get('tags').split(',').map(tag => tag.trim()).filter(Boolean);
+        const errorDiv = document.getElementById('newFileError');
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+        try {
+          const response = await fetch('/api/filesystem/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'file',
+              name: formData.get('name'),
+              text: formData.get('text'),
+              tags
+            })
+          });
+          const data = await response.json();
+          if (response.ok && data.success) {
+            hideModal('newFileModal');
+            loadFiles();
+            e.target.reset();
+          } else {
+            errorDiv.textContent = data.error || 'Failed to create file.';
+            errorDiv.style.display = 'block';
+          }
+        } catch (error) {
+          errorDiv.textContent = 'Error creating file: ' + error.message;
+          errorDiv.style.display = 'block';
+        }
+      });
+
+      // Create new folder
+      document.getElementById('newFolderForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+          const response = await fetch('/api/filesystem/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'directory',
+              name: formData.get('name'),
+              contents: []
+            })
+          });
+
+          if (response.ok) {
+            hideModal('newFolderModal');
+            loadFiles();
+          }
+        } catch (error) {
+          console.error('Error creating folder:', error);
+        }
+      });
+
+      // Create new symlink
+      document.getElementById('newSymlinkForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+          const response = await fetch('/api/filesystem/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'symlink',
+              name: formData.get('name'),
+              contents: [formData.get('targetNodeId')]
+            })
+          });
+
+          if (response.ok) {
+            hideModal('newSymlinkModal');
+            loadFiles();
+          }
+        } catch (error) {
+          console.error('Error creating symlink:', error);
+        }
+      });
+
+      // Delete node
+      async function deleteNode(nodeId) {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+
+        try {
+          const response = await fetch(`/api/filesystem/${nodeId}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            loadFiles();
+          }
+        } catch (error) {
+          console.error('Error deleting node:', error);
+        }
+      }
+
+      // Sort controls
+      document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', () => {
+          document.querySelector('.sort-option.active').classList.remove('active');
+          option.classList.add('active');
+          currentSort = option.dataset.sort;
+          sortFiles();
+          renderFiles();
+        });
+      });
+
+      // Initial load
+      loadFiles();
+    </script>
   </div>
-
-  <script>
-    function createFile() {
-      // TODO: Implement file creation
-    }
-
-    function createFolder() {
-      // TODO: Implement folder creation
-    }
-
-    function editFile(nodeId) {
-      // TODO: Implement file editing
-    }
-
-    function deleteFile(nodeId) {
-      // TODO: Implement file deletion
-    }
-  </script>
 </body>
 </html>
