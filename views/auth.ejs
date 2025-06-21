@@ -3,22 +3,25 @@
 <head>
   <title>BDPADrive - Authentication</title>
   <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png">
 </head>
 <body>
   <div class="auth-container">
-    <h1>BDPADrive</h1>
-    
+    <div style="text-align:center;margin-bottom:10px;">
+      <img src="https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png" alt="BDPADrive Logo" style="width:48px;height:48px;vertical-align:middle;">
+      <span style="font-size:2em;font-weight:700;color:#4285f4;vertical-align:middle;margin-left:8px;letter-spacing:1px;">BDPADrive</span>
+    </div>
+    <h2>Welcome</h2>
     <% if (error) { %>
       <div class="error-message">
         <%= error %>
       </div>
     <% } %>
-    
     <div class="auth-tabs">
-      <button class="tab-btn active" onclick="showTab('login')">Login</button>
-      <button class="tab-btn" onclick="showTab('register')">Register</button>
+      <button class="tab-btn active" onclick="showTab('login', event)">Login</button>
+      <button class="tab-btn" onclick="showTab('register', event)">Register</button>
     </div>
-    
     <div id="login" class="tab-content">
       <form action="/auth/login" method="POST">
         <div class="form-group">
@@ -31,8 +34,14 @@
         </div>
         <button type="submit" class="btn-primary">Login</button>
       </form>
+      <div class="social-divider">or sign in with</div>
+      <div class="social-btns">
+        <button title="Google"><span style="color:#ea4335;">&#xf1a0;</span></button>
+        <button title="Microsoft"><span style="color:#4285f4;">&#xf3ca;</span></button>
+        <button title="Apple"><span style="color:#222;">&#xf179;</span></button>
+      </div>
+      <a class="switch-link" href="#" onclick="showTab('register', event)">Don't have an account? Register</a>
     </div>
-    
     <div id="register" class="tab-content" style="display: none;">
       <form action="/auth/register" method="POST">
         <div class="form-group">
@@ -49,26 +58,26 @@
         </div>
         <button type="submit" class="btn-primary">Register</button>
       </form>
+      <div class="social-divider">or sign up with</div>
+      <div class="social-btns">
+        <button title="Google"><span style="color:#ea4335;">&#xf1a0;</span></button>
+        <button title="Microsoft"><span style="color:#4285f4;">&#xf3ca;</span></button>
+        <button title="Apple"><span style="color:#222;">&#xf179;</span></button>
+      </div>
+      <a class="switch-link" href="#" onclick="showTab('login', event)">Already have an account? Login</a>
     </div>
   </div>
-
+  <script src="https://kit.fontawesome.com/4b8b59b7b1.js" crossorigin="anonymous"></script>
   <script>
-    function showTab(tabName) {
-      // Hide all tab contents
+    function showTab(tabName, event) {
       document.querySelectorAll('.tab-content').forEach(content => {
         content.style.display = 'none';
       });
-      
-      // Remove active class from all tab buttons
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
       });
-      
-      // Show selected tab content
       document.getElementById(tabName).style.display = 'block';
-      
-      // Add active class to clicked button
-      event.target.classList.add('active');
+      if(event) event.target.classList.add('active');
     }
   </script>
 </body>
