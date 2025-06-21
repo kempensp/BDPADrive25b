@@ -1,10 +1,9 @@
-/* General Styles */
+/* General styles */
 body {
+  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.6;
-  color: #333;
+  padding: 20px;
+  background-color: #f5f5f5;
 }
 
 a {
@@ -55,83 +54,151 @@ a {
   border-radius: 4px;
 }
 
-/* Dashboard Styles */
-.dashboard {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Editor styles */
+.editor-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.top-nav {
-  background: #fff;
-  padding: 15px 30px;
+.toolbar {
+  padding: 15px;
   border-bottom: 1px solid #eee;
   display: flex;
+  gap: 10px;
   align-items: center;
-  justify-content: space-between;
 }
 
-.nav-brand {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #007bff;
+.editor-layout {
+  display: flex;
+  height: calc(100vh - 150px);
 }
 
-.nav-links a {
-  margin: 0 15px;
-  color: #666;
-}
-
-.nav-links a.active {
-  color: #007bff;
-}
-
-.content {
-  padding: 30px;
+.editor-pane, .preview-pane {
   flex: 1;
+  padding: 20px;
+  overflow-y: auto;
 }
 
-.actions {
+.editor-pane {
+  border-right: 1px solid #eee;
+}
+
+#editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Dashboard styles */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   margin-bottom: 20px;
+  padding: 20px;
 }
 
+.dashboard-card {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.storage-info {
+  margin-top: 10px;
+}
+
+.storage-bar {
+  height: 20px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.storage-used {
+  height: 100%;
+  background: #4CAF50;
+  transition: width 0.3s ease;
+}
+
+.danger-zone {
+  border-color: #ff4444;
+}
+
+.warning {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.delete-button {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background: #cc0000;
+}
+
+/* File list styles */
 .files-list {
   margin-top: 20px;
 }
 
 .file-item {
-  display: flex;
-  align-items: center;
-  padding: 15px;
+  background: white;
   border: 1px solid #eee;
   border-radius: 4px;
   margin-bottom: 10px;
+  transition: transform 0.2s;
 }
 
-.file-icon {
-  font-size: 1.5em;
-  margin-right: 15px;
+.file-item:hover {
+  transform: translateX(5px);
 }
 
-.file-info {
-  flex: 1;
+.file-item a {
+  display: flex;
+  padding: 15px;
+  text-decoration: none;
+  color: inherit;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .file-name {
   font-weight: bold;
 }
 
-.file-meta {
-  font-size: 0.9em;
+.file-size, .file-modified {
   color: #666;
+  font-size: 0.9em;
 }
 
-.file-actions {
-  display: flex;
-  gap: 10px;
-}
-
-/* Button Styles */
+/* Button styles */
 .btn-primary {
   background: #007bff;
   color: white;
@@ -166,6 +233,25 @@ a {
   padding: 5px;
 }
 
+button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 /* Search Styles */
 .search-form {
   display: flex;
@@ -187,4 +273,31 @@ a {
   padding: 10px;
   border-radius: 4px;
   margin-bottom: 20px;
+}
+
+/* Form input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+#tags {
+  min-width: 200px;
+}
+
+#saveStatus {
+  color: #666;
+  font-size: 0.9em;
+  margin-left: auto;
 }

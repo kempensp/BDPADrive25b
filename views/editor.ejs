@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BDPADrive - Editor</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <!-- Include Markdown renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Add autosave functionality -->
+  <script>
+    let lastSaveTime = Date.now();
+    const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+
+    function saveContent() {
+      const content = document.getElementById('editor').value;
+      const fileId = document.getElementById('fileId').value;
+      const fileName = document.getElementById('fileName').value;
+      const tags = document.getElementById('tags').value.split(',').map(tag => tag.trim());
+
+      fetch(`/filesystem/${fileId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: content,
+          name: fileName,
+          tags: tags
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('saveStatus').textContent = 'Changes saved ' + new Date().toLocaleTimeString();
+          lastSaveTime = Date.now();
+        }
+      })
+      .catch(error => {
+        document.getElementById('saveStatus').textContent = 'Error saving: ' + error.message;
+      });
+    }
+
+    function autoSave() {
+      if (Date.now() - lastSaveTime >= AUTOSAVE_INTERVAL) {
+        saveContent();
+      }
+    }
+
+    function updatePreview() {
+      const content = document.getElementById('editor').value;
+      const previewDiv = document.getElementById('preview');
+      previewDiv.innerHTML = marked.parse(content);
+    }
+
+    function deleteFile() {
+      if (!confirm('Are you sure you want to delete this file?')) return;
+      
+      const fileId = document.getElementById('fileId').value;
+      fetch(`/filesystem/${fileId}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/dashboard';
+        }
+      });
+    }
+
+    // Set up autosave and preview
+    setInterval(autoSave, 5000);
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('editor')) {
+        document.getElementById('editor').addEventListener('input', updatePreview);
+        updatePreview();
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="editor-container">
+    <div class="toolbar">
+      <input type="hidden" id="fileId" value="<%= file.node_id %>" />
+      <input type="text" id="fileName" value="<%= file.name %>" <%= currentUser.username !== file.owner ? 'disabled' : '' %> />
+      <input type="text" id="tags" value="<%= file.tags.join(', ') %>" placeholder="Tags (comma-separated)" <%= currentUser.username !== file.owner ? 'disabled' : '' %> />
+      <button onclick="saveContent()" <%= currentUser.username !== file.owner ? 'disabled' : '' %>>Save</button>
+      <% if (currentUser.username === file.owner) { %>
+        <button onclick="deleteFile()" class="delete-btn">Delete</button>
+      <% } %>
+      <span id="saveStatus"></span>
+    </div>
+    
+    <div class="editor-layout">
+      <div class="editor-pane">
+        <textarea id="editor" <%= currentUser.username !== file.owner ? 'readonly' : '' %>><%= file.text %></textarea>
+      </div>
+      <div class="preview-pane">
+        <div id="preview"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
