@@ -5,77 +5,40 @@
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 <body>
-  <div class="dashboard">
-    <nav class="top-nav">
-      <div class="nav-brand">BDPADrive</div>
-      <div class="nav-links">
-        <a href="/dashboard">My Files</a>
-        <a href="/search">Search</a>
-      </div>
-      <div class="nav-user">
-        <span><%= user.username %></span>
-        <form action="/auth/logout" method="POST" style="display: inline;">
-          <button type="submit" class="btn-link">Logout</button>
-        </form>
+  <%- include('partials/navbar', { user: user }) %>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="nav">
+        <a href="/dashboard" class="active">My Drive</a>
+        <a href="#" style="color:#bbb;cursor:not-allowed;">Shared with me</a>
+        <a href="#" style="color:#bbb;cursor:not-allowed;">Trash</a>
       </div>
     </nav>
-
-    <div class="content">
-      <h1>My Files</h1>
-
-      <div class="actions">
-        <button class="btn-primary" onclick="createFile()">New File</button>
-        <button class="btn-secondary" onclick="createFolder()">New Folder</button>
-      </div>
-
+    <main class="main-content">
+      <button onclick="window.location.href='/files/new'" class="new-file-button">+ New</button>
       <div class="files-list">
-        <% if (files.length === 0) { %>
-          <p>No files found. Create a new file to get started!</p>
-        <% } else { %>
-          <% files.forEach(function(file) { %>
-            <div class="file-item">
-              <div class="file-icon">
-                <% if (file.type === 'directory') { %>
-                  📁
-                <% } else if (file.type === 'file') { %>
-                  📄
-                <% } else { %>
-                  🔗
-                <% } %>
-              </div>
-              <div class="file-info">
-                <div class="file-name"><%= file.name %></div>
-                <div class="file-meta">
-                  Modified: <%= new Date(file.modifiedAt).toLocaleDateString() %>
-                </div>
-              </div>
-              <div class="file-actions">
-                <button class="btn-icon" onclick="editFile('<%= file.node_id %>')">✏️</button>
-                <button class="btn-icon" onclick="deleteFile('<%= file.node_id %>')">🗑️</button>
-              </div>
+        <% files.forEach(function(file) { %>
+          <div class="file-card" onclick="window.location.href='/files/<%= file.node_id %>'">
+            <div class="file-icon">📄</div>
+            <div class="file-name">
+              <% if (file.type === 'file') { %>
+                <a href="/editor/<%= file.node_id %>"><%= file.name %></a>
+              <% } else { %>
+                <%= file.name %>
+              <% } %>
             </div>
-          <% }); %>
-        <% } %>
+            <div class="file-size"><%= file.size %> bytes</div>
+            <div class="file-modified">Modified: <%= new Date(file.modifiedAt).toLocaleString() %></div>
+            <div class="file-actions">
+              <% if (user.username === file.owner) { %>
+                <button title="Rename" onclick="event.stopPropagation(); /* implement rename */">✏️</button>
+                <button title="Delete" onclick="event.stopPropagation(); /* implement delete */">🗑️</button>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
       </div>
-    </div>
+    </main>
   </div>
-
-  <script>
-    function createFile() {
-      // TODO: Implement file creation
-    }
-
-    function createFolder() {
-      // TODO: Implement folder creation
-    }
-
-    function editFile(nodeId) {
-      // TODO: Implement file editing
-    }
-
-    function deleteFile(nodeId) {
-      // TODO: Implement file deletion
-    }
-  </script>
 </body>
 </html>
