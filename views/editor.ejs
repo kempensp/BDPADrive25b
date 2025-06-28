@@ -5,20 +5,8 @@
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 <body>
+  <%- include('partials/navbar', { user: user }) %>
   <div class="dashboard">
-    <nav class="top-nav">
-      <div class="nav-brand">BDPADrive</div>
-      <div class="nav-links">
-        <a href="/dashboard">My Files</a>
-        <a href="/search">Search</a>
-      </div>
-      <div class="nav-user">
-        <span><%= user.username %></span>
-        <form action="/auth/logout" method="POST" style="display: inline;">
-          <button type="submit" class="btn-link">Logout</button>
-        </form>
-      </div>
-    </nav>
     <div class="content">
       <h1>Edit: <input type="text" id="filename" value="<%= file.name %>" <%= file.owner !== user.username ? 'readonly' : '' %> /></h1>
       <form id="editorForm" onsubmit="return false;">

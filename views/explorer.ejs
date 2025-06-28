@@ -1,90 +1,98 @@
-<%- include('partials/header', { title: 'Explorer' }) %>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BDPADrive - Explorer</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+  <%- include('partials/navbar', { user: user || null }) %>
+  <div class="explorer-container">
+    <h1>File Explorer</h1>
+    <form id="create-form" method="POST" action="/files/new">
+      <input type="text" name="name" placeholder="New file or folder name" required />
+      <select name="type">
+        <option value="file">Text File</option>
+        <option value="directory">Folder</option>
+        <option value="symlink">Symlink</option>
+      </select>
+      <input type="text" name="tags" placeholder="Tags (comma separated, for files)" />
+      <input type="text" name="target" placeholder="Symlink target node_id (for symlinks)" />
+      <button type="submit">Create</button>
+    </form>
 
-<div class="explorer-container">
-  <h1>File Explorer</h1>
-  <form id="create-form" method="POST" action="/files/new">
-    <input type="text" name="name" placeholder="New file or folder name" required />
-    <select name="type">
-      <option value="file">Text File</option>
-      <option value="directory">Folder</option>
-      <option value="symlink">Symlink</option>
-    </select>
-    <input type="text" name="tags" placeholder="Tags (comma separated, for files)" />
-    <input type="text" name="target" placeholder="Symlink target node_id (for symlinks)" />
-    <button type="submit">Create</button>
-  </form>
-
-  <table class="explorer-table">
-    <thead>
-      <tr>
-        <th><a href="?sort=name">Name</a></th>
-        <th>Type</th>
-        <th>Owner</th>
-        <th><a href="?sort=createdAt">Created</a></th>
-        <th><a href="?sort=modifiedAt">Modified</a></th>
-        <th><a href="?sort=size">Size</a></th>
-        <th>Tags</th>
-        <th>Preview</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% files.forEach(function(file) { %>
+    <table class="explorer-table">
+      <thead>
         <tr>
-          <td>
-            <% if (file.type === 'directory') { %>
-              <a href="/files/<%= file.node_id %>"><%= file.name %></a>
-            <% } else if (file.type === 'symlink') { %>
-              <span class="symlink <%= file.broken ? 'broken' : '' %>">🔗 <%= file.name %></span>
-              <% if (file.broken) { %><span class="broken-label">(broken)</span><% } %>
-            <% } else { %>
-              <a href="/editor/<%= file.node_id %>"><%= file.name %></a>
-            <% } %>
-          </td>
-          <td><%= file.type %></td>
-          <td><%= file.owner %></td>
-          <td><%= new Date(file.createdAt).toLocaleString() %></td>
-          <td><%= new Date(file.modifiedAt).toLocaleString() %></td>
-          <td><%= file.size || '-' %></td>
-          <td>
-            <% if (file.type === 'file') { %>
-              <%= (file.tags || []).join(', ') %>
-            <% } %>
-          </td>
-          <td>
-            <% if (file.type === 'file') { %>
-              <img src="/files/preview/<%= file.node_id %>" class="preview-thumb" alt="Preview" />
-            <% } %>
-          </td>
-          <td>
-            <% if (file.owner === user.username) { %>
-              <form method="POST" action="/files/<%= file.node_id %>/delete" style="display:inline;">
-                <button type="submit">Delete</button>
-              </form>
-              <form method="POST" action="/files/<%= file.node_id %>/rename" style="display:inline;">
-                <input type="text" name="newName" placeholder="Rename" />
-                <button type="submit">Rename</button>
-              </form>
+          <th><a href="?sort=name">Name</a></th>
+          <th>Type</th>
+          <th>Owner</th>
+          <th><a href="?sort=createdAt">Created</a></th>
+          <th><a href="?sort=modifiedAt">Modified</a></th>
+          <th><a href="?sort=size">Size</a></th>
+          <th>Tags</th>
+          <th>Preview</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% files.forEach(function(file) { %>
+          <tr>
+            <td>
+              <% if (file.type === 'directory') { %>
+                <a href="/files/<%= file.node_id %>"><%= file.name %></a>
+              <% } else if (file.type === 'symlink') { %>
+                <span class="symlink <%= file.broken ? 'broken' : '' %>">🔗 <%= file.name %></span>
+                <% if (file.broken) { %><span class="broken-label">(broken)</span><% } %>
+              <% } else { %>
+                <a href="/editor/<%= file.node_id %>"><%= file.name %></a>
+              <% } %>
+            </td>
+            <td><%= file.type %></td>
+            <td><%= file.owner %></td>
+            <td><%= new Date(file.createdAt).toLocaleString() %></td>
+            <td><%= new Date(file.modifiedAt).toLocaleString() %></td>
+            <td><%= file.size || '-' %></td>
+            <td>
               <% if (file.type === 'file') { %>
-                <form method="POST" action="/files/<%= file.node_id %>/tags" style="display:inline;">
-                  <input type="text" name="tags" placeholder="Tags (comma separated)" />
-                  <button type="submit">Update Tags</button>
+                <%= (file.tags || []).join(', ') %>
+              <% } %>
+            </td>
+            <td>
+              <% if (file.type === 'file') { %>
+                <img src="/files/preview/<%= file.node_id %>" class="preview-thumb" alt="Preview" />
+              <% } %>
+            </td>
+            <td>
+              <% if (file.owner === user.username) { %>
+                <form method="POST" action="/files/<%= file.node_id %>/delete" style="display:inline;">
+                  <button type="submit">Delete</button>
+                </form>
+                <form method="POST" action="/files/<%= file.node_id %>/rename" style="display:inline;">
+                  <input type="text" name="newName" placeholder="Rename" />
+                  <button type="submit">Rename</button>
+                </form>
+                <% if (file.type === 'file') { %>
+                  <form method="POST" action="/files/<%= file.node_id %>/tags" style="display:inline;">
+                    <input type="text" name="tags" placeholder="Tags (comma separated)" />
+                    <button type="submit">Update Tags</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/files/<%= file.node_id %>/move" style="display:inline;">
+                  <input type="text" name="targetFolder" placeholder="Move to folder node_id" />
+                  <button type="submit">Move</button>
+                </form>
+                <form method="POST" action="/files/<%= file.node_id %>/owner" style="display:inline;">
+                  <input type="text" name="newOwner" placeholder="New owner username" />
+                  <button type="submit">Change Owner</button>
                 </form>
               <% } %>
-              <form method="POST" action="/files/<%= file.node_id %>/move" style="display:inline;">
-                <input type="text" name="targetFolder" placeholder="Move to folder node_id" />
-                <button type="submit">Move</button>
-              </form>
-              <form method="POST" action="/files/<%= file.node_id %>/owner" style="display:inline;">
-                <input type="text" name="newOwner" placeholder="New owner username" />
-                <button type="submit">Change Owner</button>
-              </form>
-            <% } %>
-          </td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
-</div>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
 
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>
+</body>
+</html>
