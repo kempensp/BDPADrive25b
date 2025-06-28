@@ -5,11 +5,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
+const marked = require('marked');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
 var filesRouter = require('./routes/files');
+var editorRouter = require('./routes/editor');
 
 var { auth } = require('./middleware/auth');
 
@@ -45,6 +47,12 @@ app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/files', filesRouter);
+app.use('/editor', editorRouter);
+app.post('/api/markdown', (req, res) => {
+  let text = '';
+  if (req.body && req.body.text) text = req.body.text;
+  res.send(marked.parse(text));
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

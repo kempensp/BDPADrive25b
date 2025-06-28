@@ -65,3 +65,10 @@ router.get('/search', requireAuth, async function(req, res, next) {
 });
 
 module.exports = router;
+              <div class="file-name">
+                <% if (file.type === 'file') { %>
+                  <a href="/editor/<%= file.node_id %>"><%= file.name %></a>
+                <% } else { %>
+                  <%= file.name %>
+                <% } %>
+              </div>
