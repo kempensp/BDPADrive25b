@@ -10,17 +10,20 @@ const headers = {
     'Authorization': `Bearer ${process.env.BEARER_TOKEN.trim()}`
 };
 
-// GET editor view for a file
+// GET editor view for a file (find file by node_id, regardless of owner)
 router.get('/:node_id', requireAuth, async (req, res) => {
-    const username = req.user.username;
     const node_id = req.params.node_id;
     try {
-        const response = await fetch(`${API_BASE_URL}/filesystem/${username}/${node_id}`, { headers });
-        const data = await response.json();
-        if (!data.success || !data.nodes || !data.nodes[0]) {
+        // Search for the file in all files the user can access
+        const searchRes = await fetch(`${API_BASE_URL}/filesystem/${req.user.username}/search`, { headers });
+        const searchData = await searchRes.json();
+        if (!searchData.success || !searchData.nodes) {
             return res.status(404).render('error', { message: 'File not found' });
         }
-        const file = data.nodes[0];
+        const file = searchData.nodes.find(f => f.node_id === node_id);
+        if (!file) {
+            return res.status(404).render('error', { message: 'File not found' });
+        }
         const html = marked.parse(file.text || '');
         res.render('editor', {
             title: file.name,
@@ -35,19 +38,24 @@ router.get('/:node_id', requireAuth, async (req, res) => {
 
 // POST save file changes
 router.post('/:node_id/save', requireAuth, async (req, res) => {
-    const username = req.user.username;
     const node_id = req.params.node_id;
     const { text, tags, name } = req.body;
     try {
-        // Get file to check lock and ownership
-        const response = await fetch(`${API_BASE_URL}/filesystem/${username}/${node_id}`, { headers });
-        const data = await response.json();
-        const file = data.nodes[0];
-        if (file.owner !== username) {
+        // Find the file and its owner
+        const searchRes = await fetch(`${API_BASE_URL}/filesystem/${req.user.username}/search`, { headers });
+        const searchData = await searchRes.json();
+        if (!searchData.success || !searchData.nodes) {
+            return res.status(404).json({ success: false, error: 'File not found' });
+        }
+        const file = searchData.nodes.find(f => f.node_id === node_id);
+        if (!file) {
+            return res.status(404).json({ success: false, error: 'File not found' });
+        }
+        if (file.owner !== req.user.username) {
             return res.status(403).json({ success: false, error: 'Not owner' });
         }
         // Save changes
-        const putRes = await fetch(`${API_BASE_URL}/filesystem/${username}/${node_id}`, {
+        const putRes = await fetch(`${API_BASE_URL}/filesystem/${file.owner}/${node_id}`, {
             method: 'PUT',
             headers,
             body: JSON.stringify({
@@ -65,18 +73,23 @@ router.post('/:node_id/save', requireAuth, async (req, res) => {
 
 // POST delete file
 router.post('/:node_id/delete', requireAuth, async (req, res) => {
-    const username = req.user.username;
     const node_id = req.params.node_id;
     try {
-        // Get file to check ownership
-        const response = await fetch(`${API_BASE_URL}/filesystem/${username}/${node_id}`, { headers });
-        const data = await response.json();
-        const file = data.nodes[0];
-        if (file.owner !== username) {
+        // Find the file and its owner
+        const searchRes = await fetch(`${API_BASE_URL}/filesystem/${req.user.username}/search`, { headers });
+        const searchData = await searchRes.json();
+        if (!searchData.success || !searchData.nodes) {
+            return res.status(404).json({ success: false, error: 'File not found' });
+        }
+        const file = searchData.nodes.find(f => f.node_id === node_id);
+        if (!file) {
+            return res.status(404).json({ success: false, error: 'File not found' });
+        }
+        if (file.owner !== req.user.username) {
             return res.status(403).json({ success: false, error: 'Not owner' });
         }
         // Delete file
-        const delRes = await fetch(`${API_BASE_URL}/filesystem/${username}/${node_id}`, {
+        const delRes = await fetch(`${API_BASE_URL}/filesystem/${file.owner}/${node_id}`, {
             method: 'DELETE',
             headers
         });
