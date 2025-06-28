@@ -75,10 +75,24 @@ router.post('/login', async (req, res) => {
         // Create session
         req.session.token = jwt.sign({ username }, SECRET_KEY);
         req.session.username = username;
+        console.log('Login successful, redirecting to /editor');
+        // Redirect to the first file's editor if available, else dashboard
+        try {
+            const filesRes = await fetch(`${API_BASE_URL}/filesystem/${username}/search`, { headers });
+            const filesData = await filesRes.json();
+            if (filesData.success && filesData.nodes && filesData.nodes.length > 0) {
+                const firstFile = filesData.nodes.find(f => f.type === 'file');
+                if (firstFile) {
+                    return res.redirect(`/editor/${firstFile.node_id}`);
+                }
+            }
+        } catch (e) {
+            console.error('Error fetching files after login:', e);
+        }
         res.redirect('/dashboard');
     } catch (err) {
         console.error('Login error:', err);
-        res.render('auth', { error: 'An error occurred during login: ' + err.message });
+        return res.render('auth', { error: 'An error occurred during login: ' + (err && err.message ? err.message : err) });
     }
 });
 
