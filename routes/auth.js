@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
         const userResponse = await fetch(`${API_BASE_URL}/users/${username}`, { headers });
         const userData = await userResponse.json();
         if (!userData.success) {
-            return res.render('auth', { error: 'Invalid credentials' });
+            return res.render('auth', { error: 'Login failed: User not found or invalid credentials.' });
         }
         // Derive key using password and salt
         const key = await deriveKey(password, userData.user.salt);
@@ -60,16 +60,21 @@ router.post('/login', async (req, res) => {
             headers,
             body: JSON.stringify({ key })
         });
-        if (authResponse.status === 200) {
-            // Create session
-            req.session.token = jwt.sign({ username }, SECRET_KEY);
-            req.session.username = username;
-            res.redirect('/dashboard');
-        } else {
-            res.render('auth', { error: 'Invalid credentials' });
+        let authError = '';
+        if (authResponse.status !== 200) {
+            try {
+                const authData = await authResponse.json();
+                authError = authData.error || '';
+            } catch {}
+            return res.render('auth', { error: 'Login failed: Invalid credentials.' + (authError ? ' ' + authError : '') });
         }
+        // Create session
+        req.session.token = jwt.sign({ username }, SECRET_KEY);
+        req.session.username = username;
+        res.redirect('/dashboard');
     } catch (err) {
-        res.render('auth', { error: 'An error occurred' });
+        console.error('Login error:', err);
+        res.render('auth', { error: 'An error occurred during login: ' + err.message });
     }
 });
 
