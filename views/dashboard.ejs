@@ -5,12 +5,7 @@
   <link rel='stylesheet' href='/stylesheets/style.css' />
 </head>
 <body>
-  <div class="topbar">
-    <span class="logo">BDPADrive</span>
-    <div class="user-info">
-      <%= user.username %> | <a href="/auth/logout">Logout</a>
-    </div>
-  </div>
+  <%- include('partials/navbar', { user: user }) %>
   <div class="layout">
     <nav class="sidebar">
       <div class="nav">
