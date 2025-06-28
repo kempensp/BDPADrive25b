@@ -48,6 +48,7 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/files', filesRouter);
 app.use('/editor', editorRouter);
+app.use('/explorer', require('./routes/files'));
 app.post('/api/markdown', (req, res) => {
   let text = '';
   if (req.body && req.body.text) text = req.body.text;
