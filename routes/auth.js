@@ -50,6 +50,7 @@ router.post('/login', async (req, res) => {
         const userResponse = await fetch(`${API_BASE_URL}/users/${username}`, { headers });
         const userData = await userResponse.json();
         if (!userData.success) {
+            console.error('Login failed: /users/:username response', userResponse.status, userData);
             return res.render('auth', { error: 'Login failed: User not found or invalid credentials.' });
         }
         // Derive key using password and salt
@@ -65,7 +66,10 @@ router.post('/login', async (req, res) => {
             try {
                 const authData = await authResponse.json();
                 authError = authData.error || '';
-            } catch {}
+                console.error('Login failed: /users/:username/auth response', authResponse.status, authData);
+            } catch (e) {
+                console.error('Login failed: /users/:username/auth response', authResponse.status, 'Could not parse JSON');
+            }
             return res.render('auth', { error: 'Login failed: Invalid credentials.' + (authError ? ' ' + authError : '') });
         }
         // Create session
@@ -104,7 +108,7 @@ router.post('/register', async (req, res) => {
             req.session.username = username;
             res.redirect('/dashboard');
         } else {
-            console.error('Registration failed:', data);
+            console.error('Registration failed:', response.status, data);
             res.render('auth', { error: 'Registration failed: ' + (data.error || 'Unknown error') });
         }
     } catch (err) {
