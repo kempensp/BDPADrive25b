@@ -99,10 +99,12 @@ router.post('/register', async (req, res) => {
             req.session.username = username;
             res.redirect('/dashboard');
         } else {
-            res.render('auth', { error: 'Registration failed' });
+            console.error('Registration failed:', data);
+            res.render('auth', { error: 'Registration failed: ' + (data.error || 'Unknown error') });
         }
     } catch (err) {
-        res.render('auth', { error: 'An error occurred' });
+        console.error('Registration error:', err);
+        res.render('auth', { error: 'An error occurred: ' + err.message });
     }
 });
 
