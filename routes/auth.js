@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const SECRET_KEY = 'your-secret-key'; // In production, use environment variable
+const SECRET_KEY = process.env.SECRET_KEY || 'changeme'; // Use .env secret key
 
 const API_BASE_URL = 'https://drive.api.hscc.bdpa.org/v1';
 
@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.BEARER_TOKEN.trim()}`
+    'Authorization': `Bearer ${process.env.BEARER_TOKEN ? process.env.BEARER_TOKEN.trim() : ''}`
 };
 
 function deriveKey(password, salt) {
